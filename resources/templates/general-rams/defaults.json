@@ -1,0 +1,69 @@
+{
+  "templateId": "general-rams",
+  "cover": {
+    "projectTitle": "",
+    "location": "",
+    "client": "",
+    "date": "",
+    "reviewDate": ""
+  },
+  "activities": ["Describe activities and persons involved"],
+  "methodStatement": {
+    "scopeOfWork": "",
+    "responsibilities": "",
+    "materialsAndEquipment": "",
+    "healthAndSafety": "",
+    "workProcedure": "",
+    "environmentalConsiderations": "",
+    "emergencyProcedures": "",
+    "welfareRequirements": "",
+    "liftingEquipment": "",
+    "pat": "",
+    "confinedSpaceNote": "Confined space work not to be undertaken unless risk assessed separately.",
+    "highRiskControls": ""
+  },
+  "hotWork": {
+    "priorToWork": "",
+    "hazards": "",
+    "harm": "",
+    "controlMeasures": "",
+    "onCompletion": ""
+  },
+  "ppeItems": [
+    { "category": "HARD HAT", "requirement": "EN397" },
+    { "category": "HI VIS", "requirement": "EN20471" },
+    { "category": "FOOTWEAR", "requirement": "S3" }
+  ],
+  "rescuePlan": {
+    "title": "Emergency rescue plan",
+    "body": ""
+  },
+  "riskAssessment": {
+    "assessorName": "",
+    "assessmentDate": "",
+    "reassessmentDate": "",
+    "rows": [
+      {
+        "activity": "",
+        "hazard": "",
+        "likelihood": 1,
+        "severity": 1,
+        "risk": 1,
+        "who": "",
+        "controls": "",
+        "residualLikelihood": 1,
+        "residualSeverity": 1,
+        "residualRisk": 1,
+        "residualWho": "",
+        "monitoring": ""
+      }
+    ]
+  },
+  "signOff": {
+    "workDescription": "",
+    "jobReference": "",
+    "client": "",
+    "siteAddress": "",
+    "rows": [{ "name": "", "signature": "", "date": "", "company": "", "notes": "" }]
+  }
+}

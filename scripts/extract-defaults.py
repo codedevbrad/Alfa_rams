@@ -1,0 +1,117 @@
+"""One-time extraction of P&G RAMS defaults.json from reference docx."""
+import json
+import zipfile
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+DOCX = ROOT / "Procter and Gamble Thurrock Pipe Fitting RAMS V1.docx"
+OUT = ROOT / "resources/templates/pg-thurrock-pipefitting/defaults.json"
+W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+
+
+def extract_text():
+    with zipfile.ZipFile(DOCX) as z:
+        root = ET.fromstring(z.read("word/document.xml"))
+    parts = []
+    for t in root.iter(f"{W}t"):
+        if t.text:
+            parts.append(t.text)
+        if t.tail:
+            parts.append(t.tail)
+    return "".join(parts)
+
+
+def main():
+    full = extract_text()
+    # Build structured defaults from known P&G sample values
+    doc = {
+        "templateId": "pg-thurrock-pipefitting",
+        "cover": {
+            "projectTitle": "Beads Construction Project at Northfield and Southfield",
+            "location": "P&G Thurrock Plant, Thurrock, UK",
+            "client": "P&G",
+            "date": "11/09/24",
+            "reviewDate": "11/10/24",
+        },
+        "activities": [
+            "HOT WORK – TIG WELDING",
+            "USE OF POWER TOOLS",
+            "USE OF HAND TOOLS",
+            "ALFA OPERATIVES",
+        ],
+        "methodStatement": {
+            "scopeOfWork": "The method statement outlines the process for the installation of both stainless steel and mild steel pipework for the Beads Construction Project at Northfield and Southfield. The scope includes the delivery, installation, fitting, and welding of process pipework in accordance with industry standards, ensuring full compliance with safety, quality, and environmental regulations.",
+            "responsibilities": "Project Manager: Responsible for overseeing the project and ensuring all activities adhere to the method statement, timeline, and health and safety standards.\nSite Supervisor: Ensures day-to-day operations are conducted safely, efficiently, and to specification.\nPipefitters & Welders: Carry out pipefitting and welding works as per the provided designs and method statement.\nHealth & Safety Officer: Ensures all safety protocols are followed.",
+            "materialsAndEquipment": "Pipe Materials: Stainless steel and mild steel pipes, fittings, gaskets and fasteners.\nTools & Equipment: TIG welding machines, pipe cutters, beveling tools, grinders, lifting equipment as required.\nPPE: Hard hats, safety boots, flame-retardant clothing, gloves, eye and hearing protection, respirators where necessary.",
+            "healthAndSafety": "A detailed risk assessment will be conducted prior to commencing the work. Hot work permits, manual handling, working at height, PUWER inspections, CSCS/SSSTS requirements, MEWP rescue plans, COSHH assessments, and tethered tools when working at height.",
+            "workProcedure": "5.1 Preparation: Site induction, review drawings, material handling, pipe support installation.\n5.2 Pipe cutting, beveling and preparation.\n5.3 Pipe fitting and alignment.\n5.4 TIG/MIG/MMA welding as applicable.\n5.5 Testing and inspection by others.\n5.6 Clean-up and documentation.",
+            "environmentalConsiderations": "Waste management per site procedures. Spill prevention with spill trays. Noise control above 85 dB per Control of Noise at Work Regulations 2005.",
+            "emergencyProcedures": "Fire: evacuate to muster point. Accidents: report to Site Supervisor and H&S Officer. Spills: use spill kits on site.",
+            "welfareRequirements": "Rest areas, sanitation, and potable drinking water for all workers.",
+            "liftingEquipment": "Lifting plans per LOLER 1998. MHE including forklifts and cranes as needed.",
+            "pat": "All power tools PAT tested per Electricity at Work Regulations 1989.",
+            "confinedSpaceNote": "Confined Space Work Not to Be Undertaken Unless Risk Assessed Separately",
+            "highRiskControls": "Controls for confined spaces and working at height per Confined Spaces Regulations 1997 and LOLER.",
+        },
+        "hotWork": {
+            "priorToWork": "1. PPE: gauntlets, welding mask, safety footwear, flame retardant overalls.\n2. Appropriate tools in good condition.\n3. Consider risks; hot work permits in place.\n4. Fire extinguisher at work area.",
+            "hazards": "Fire/explosion; asphyxiation; oxygen-rich atmospheres; hot materials; UV/IR exposure; electrocution; manual handling.",
+            "harm": "Burns, electric shock; eye damage; asphyxiation; musculoskeletal problems.",
+            "controlMeasures": "Hot work permits; remove/protect flammables; PPE and second person; ventilation; screens; fire extinguisher; no welding galvanised without removal; fire watch.",
+            "onCompletion": "Cool work pieces; tidy area; check 30 minutes after; sign off permit; 1 hour fire watch at end of day.",
+        },
+        "ppeItems": [
+            {"category": "RESPIRATORY", "requirement": "Tested FFP3 Mask"},
+            {"category": "SAFETY HARNESS", "requirement": "Safety Harness with Fall Restraint Lanyard if required"},
+            {"category": "WELDING HEAD SCREEN", "requirement": "Auto-darkening helmet shade 9–13"},
+            {"category": "BOOTS", "requirement": "Type S3"},
+            {"category": "GLOVES", "requirement": "Nitrile Gloves"},
+            {"category": "GOGGLES", "requirement": "EN.166"},
+            {"category": "HARD HAT", "requirement": "EN397"},
+            {"category": "HI VIS VEST", "requirement": "EN20471:2013"},
+            {"category": "TYVEK COVERALLS", "requirement": "ENISO 13982-1:2004"},
+            {"category": "LOTO", "requirement": "All power sources isolated and rendered inoperative"},
+        ],
+        "rescuePlan": {
+            "title": "Scissor Lift Rescue Plan",
+            "body": "Assess situation; activate emergency descent; manual rescue with fall protection if needed; medical response; secure site; maintain communication; training and drills.",
+        },
+        "riskAssessment": {
+            "assessorName": "T Humphries",
+            "assessmentDate": "11/09/24",
+            "reassessmentDate": "",
+            "rows": [
+                {
+                    "activity": "Hot Work – TIG Welding",
+                    "hazard": "Fire and explosion",
+                    "likelihood": 3,
+                    "severity": 4,
+                    "risk": 12,
+                    "who": "A",
+                    "controls": "Hot work permit, fire watch, extinguishers",
+                    "residualLikelihood": 2,
+                    "residualSeverity": 3,
+                    "residualRisk": 6,
+                    "residualWho": "A",
+                    "monitoring": "Site safety inspections",
+                }
+            ],
+        },
+        "signOff": {
+            "workDescription": "Pipefitting for Process Pipework at P&G Thurrock Plant",
+            "jobReference": "PO 8005488874",
+            "client": "Procter and Gamble Thurrock",
+            "siteAddress": "Procter & Gamble Ltd, Hedley Ave, Grays RM20 4AL",
+            "rows": [
+                {"name": "", "signature": "", "date": "", "company": "", "notes": ""}
+            ],
+        },
+    }
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(json.dumps(doc, indent=2), encoding="utf-8")
+    print(f"Wrote {OUT} ({len(full)} chars from source)")
+
+
+if __name__ == "__main__":
+    main()
