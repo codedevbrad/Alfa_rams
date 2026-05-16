@@ -1,0 +1,60 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+model ActivityCategory {
+  id        Int              @id @default(autoincrement())
+  name      String           @unique
+  sortOrder Int              @default(0)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  hazards   ActivityHazard[]
+}
+
+model ActivityHazard {
+  id                 Int              @id @default(autoincrement())
+  categoryId         Int
+  category           ActivityCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  activity           String
+  hazard             String
+  likelihood         Int
+  severity           Int
+  who                String
+  controls           String
+  residualLikelihood Int
+  residualSeverity   Int
+  residualWho        String
+  monitoring         String
+  sortOrder          Int              @default(0)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([categoryId])
+}
+
+model PpeGroup {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  items     PpeItem[]
+}
+
+model PpeItem {
+  id          Int      @id @default(autoincrement())
+  groupId     Int
+  group       PpeGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  category    String
+  requirement String
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([groupId])
+}

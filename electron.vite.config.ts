@@ -14,6 +14,11 @@ export default defineConfig({
   main: {
     resolve: {
       alias: sharedAlias
+    },
+    build: {
+      rollupOptions: {
+        external: ['better-sqlite3']
+      }
     }
   },
   preload: {

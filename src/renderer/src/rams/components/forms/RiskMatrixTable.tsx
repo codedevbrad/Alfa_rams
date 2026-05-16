@@ -7,8 +7,7 @@ import {
   type RiskScaleLevel
 } from '@shared/rams/measures'
 import { riskBand, withComputedRisks } from '@shared/rams/risk'
-import { ACTIVITY_HAZARDS } from '../../activities/activities'
-import { AddRiskRowButton } from '../../activities/AddRiskRowPicker'
+import { AddRiskRowButton, hazardToRiskRow, useRamsLibrary } from '@renderer/library'
 import { Section } from './Field'
 
 function RiskScaleRow({ label, scale }: { label: string; scale: RiskScaleLevel[] }): React.JSX.Element {
@@ -38,6 +37,8 @@ export function RiskMatrixTable({
   riskAssessment,
   onChange
 }: RiskMatrixTableProps): React.JSX.Element {
+  const { activityCategories, loading } = useRamsLibrary()
+
   const setMeta = (
     key: 'assessorName' | 'assessmentDate' | 'reassessmentDate',
     value: string
@@ -53,12 +54,10 @@ export function RiskMatrixTable({
     onChange({ ...riskAssessment, rows })
   }
 
-  const addRowFromTemplate = (templateIndex: number): void => {
-    const template = ACTIVITY_HAZARDS[templateIndex]
-    if (!template) return
+  const addRowFromTemplate = (hazard: Parameters<typeof hazardToRiskRow>[0]): void => {
     onChange({
       ...riskAssessment,
-      rows: [...riskAssessment.rows, structuredClone(template)]
+      rows: [...riskAssessment.rows, structuredClone(hazardToRiskRow(hazard))]
     })
   }
 
@@ -259,7 +258,11 @@ export function RiskMatrixTable({
           </tbody>
         </table>
       </div>
-      <AddRiskRowButton onAdd={addRowFromTemplate} />
+      <AddRiskRowButton
+        categories={activityCategories}
+        loading={loading}
+        onAdd={addRowFromTemplate}
+      />
     </Section>
   )
 }
