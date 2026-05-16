@@ -2,6 +2,8 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import { ensureDatabase } from './db/ensure-database'
+import { registerLibraryIpcHandlers } from './rams/library-ipc-handlers'
 import { registerRamsIpcHandlers } from './rams/ipc-handlers'
 
 function createWindow(): void {
@@ -51,13 +53,21 @@ app.whenReady().then(() => {
   })
 
   ipcMain.on('ping', () => console.log('pong'))
-  registerRamsIpcHandlers()
 
-  createWindow()
+  void ensureDatabase()
+    .then(() => {
+      registerRamsIpcHandlers()
+      registerLibraryIpcHandlers()
+      createWindow()
+    })
+    .catch((error) => {
+      console.error('Failed to initialize library database:', error)
+      registerRamsIpcHandlers()
+      registerLibraryIpcHandlers()
+      createWindow()
+    })
 
   app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
 })

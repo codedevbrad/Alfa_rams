@@ -1,45 +1,45 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ACTIVITY_CATEGORIES } from './activities'
+import type { ActivityCategoryDto, ActivityHazardDto } from '@shared/rams/library'
 
-export interface ActivityPickerOption {
-  index: number
+interface ActivityPickerOption {
   category: string
-  activity: string
-  hazard: string
+  hazard: ActivityHazardDto
 }
 
-const ACTIVITY_PICKER_OPTIONS: ActivityPickerOption[] = (() => {
-  let index = 0
-  return ACTIVITY_CATEGORIES.flatMap(({ category, hazards }) =>
-    hazards.map((hazard) => ({
-      index: index++,
-      category,
-      activity: hazard.activity,
-      hazard: hazard.hazard
-    }))
+function buildOptions(categories: ActivityCategoryDto[]): ActivityPickerOption[] {
+  return categories.flatMap(({ category, hazards }) =>
+    hazards.map((hazard) => ({ category, hazard }))
   )
-})()
+}
 
-function filterOptions(query: string): ActivityPickerOption[] {
+function filterOptions(options: ActivityPickerOption[], query: string): ActivityPickerOption[] {
   const q = query.trim().toLowerCase()
-  if (!q) return ACTIVITY_PICKER_OPTIONS
-  return ACTIVITY_PICKER_OPTIONS.filter(
+  if (!q) return options
+  return options.filter(
     (option) =>
       option.category.toLowerCase().includes(q) ||
-      option.activity.toLowerCase().includes(q) ||
-      option.hazard.toLowerCase().includes(q)
+      option.hazard.activity.toLowerCase().includes(q) ||
+      option.hazard.hazard.toLowerCase().includes(q)
   )
 }
 
 interface AddRiskRowPickerProps {
-  onAdd: (templateIndex: number) => void
+  categories: ActivityCategoryDto[]
+  loading: boolean
+  onAdd: (hazard: ActivityHazardDto) => void
   onClose: () => void
 }
 
-export function AddRiskRowPicker({ onAdd, onClose }: AddRiskRowPickerProps): React.JSX.Element {
+export function AddRiskRowPicker({
+  categories,
+  loading,
+  onAdd,
+  onClose
+}: AddRiskRowPickerProps): React.JSX.Element {
   const [query, setQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
-  const filtered = useMemo(() => filterOptions(query), [query])
+  const allOptions = useMemo(() => buildOptions(categories), [categories])
+  const filtered = useMemo(() => filterOptions(allOptions, query), [allOptions, query])
 
   const grouped = useMemo(() => {
     const map = new Map<string, ActivityPickerOption[]>()
@@ -99,6 +99,7 @@ export function AddRiskRowPicker({ onAdd, onClose }: AddRiskRowPickerProps): Rea
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search category, activity or hazard…"
             className="w-full rounded-md border border-slate-600 bg-slate-950/80 py-2 pl-8 pr-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500/60 focus:outline-none focus:ring-2 focus:ring-sky-500/25"
+            disabled={loading}
           />
         </div>
       </div>
@@ -108,7 +109,9 @@ export function AddRiskRowPicker({ onAdd, onClose }: AddRiskRowPickerProps): Rea
         role="listbox"
         aria-label="Activity hazards"
       >
-        {grouped.length === 0 ? (
+        {loading ? (
+          <li className="px-4 py-8 text-center text-sm text-slate-500">Loading library…</li>
+        ) : grouped.length === 0 ? (
           <li className="px-4 py-8 text-center text-sm text-slate-500">No matching hazards</li>
         ) : (
           grouped.map(([category, options]) => (
@@ -118,18 +121,18 @@ export function AddRiskRowPicker({ onAdd, onClose }: AddRiskRowPickerProps): Rea
               </p>
               <ul>
                 {options.map((option) => (
-                  <li key={option.index}>
+                  <li key={option.hazard.id}>
                     <button
                       type="button"
                       role="option"
-                      onClick={() => onAdd(option.index)}
+                      onClick={() => onAdd(option.hazard)}
                       className="group flex w-full flex-col gap-0.5 border-l-2 border-transparent px-3 py-2.5 text-left transition hover:border-sky-500 hover:bg-sky-500/10 focus-visible:border-sky-500 focus-visible:bg-sky-500/10 focus-visible:outline-none"
                     >
                       <span className="text-sm font-medium text-slate-100 group-hover:text-sky-100">
-                        {option.activity}
+                        {option.hazard.activity}
                       </span>
                       <span className="text-xs leading-snug text-slate-400 group-hover:text-slate-300">
-                        {option.hazard}
+                        {option.hazard.hazard}
                       </span>
                     </button>
                   </li>
@@ -154,10 +157,16 @@ export function AddRiskRowPicker({ onAdd, onClose }: AddRiskRowPickerProps): Rea
 }
 
 interface AddRiskRowButtonProps {
-  onAdd: (templateIndex: number) => void
+  categories: ActivityCategoryDto[]
+  loading: boolean
+  onAdd: (hazard: ActivityHazardDto) => void
 }
 
-export function AddRiskRowButton({ onAdd }: AddRiskRowButtonProps): React.JSX.Element {
+export function AddRiskRowButton({
+  categories,
+  loading,
+  onAdd
+}: AddRiskRowButtonProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -176,7 +185,8 @@ export function AddRiskRowButton({ onAdd }: AddRiskRowButtonProps): React.JSX.El
       <button
         type="button"
         onClick={() => setOpen((wasOpen) => !wasOpen)}
-        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition ${
+        disabled={loading}
+        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition disabled:opacity-50 ${
           open
             ? 'bg-sky-500/20 text-sky-300 ring-1 ring-sky-500/40'
             : 'text-sky-400 hover:bg-sky-500/10 hover:text-sky-300'
@@ -189,8 +199,10 @@ export function AddRiskRowButton({ onAdd }: AddRiskRowButtonProps): React.JSX.El
       </button>
       {open && (
         <AddRiskRowPicker
-          onAdd={(index) => {
-            onAdd(index)
+          categories={categories}
+          loading={loading}
+          onAdd={(hazard) => {
+            onAdd(hazard)
             setOpen(false)
           }}
           onClose={() => setOpen(false)}

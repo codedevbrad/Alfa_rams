@@ -1,45 +1,43 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { PPE_CATEGORIES } from './ppe'
+import type { PpeCategoryGroupDto, PpeItemDto } from '@shared/rams/library'
 
-export interface PpePickerOption {
-  index: number
+interface PpePickerOption {
   group: string
-  category: string
-  requirement: string
+  item: PpeItemDto
 }
 
-const PPE_PICKER_OPTIONS: PpePickerOption[] = (() => {
-  let index = 0
-  return PPE_CATEGORIES.flatMap(({ group, items }) =>
-    items.map((item) => ({
-      index: index++,
-      group,
-      category: item.category,
-      requirement: item.requirement
-    }))
-  )
-})()
+function buildOptions(categories: PpeCategoryGroupDto[]): PpePickerOption[] {
+  return categories.flatMap(({ group, items }) => items.map((item) => ({ group, item })))
+}
 
-function filterOptions(query: string): PpePickerOption[] {
+function filterOptions(options: PpePickerOption[], query: string): PpePickerOption[] {
   const q = query.trim().toLowerCase()
-  if (!q) return PPE_PICKER_OPTIONS
-  return PPE_PICKER_OPTIONS.filter(
+  if (!q) return options
+  return options.filter(
     (option) =>
       option.group.toLowerCase().includes(q) ||
-      option.category.toLowerCase().includes(q) ||
-      option.requirement.toLowerCase().includes(q)
+      option.item.category.toLowerCase().includes(q) ||
+      option.item.requirement.toLowerCase().includes(q)
   )
 }
 
 interface AddPpeRowPickerProps {
-  onAdd: (templateIndex: number) => void
+  categories: PpeCategoryGroupDto[]
+  loading: boolean
+  onAdd: (item: PpeItemDto) => void
   onClose: () => void
 }
 
-export function AddPpeRowPicker({ onAdd, onClose }: AddPpeRowPickerProps): React.JSX.Element {
+export function AddPpeRowPicker({
+  categories,
+  loading,
+  onAdd,
+  onClose
+}: AddPpeRowPickerProps): React.JSX.Element {
   const [query, setQuery] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
-  const filtered = useMemo(() => filterOptions(query), [query])
+  const allOptions = useMemo(() => buildOptions(categories), [categories])
+  const filtered = useMemo(() => filterOptions(allOptions, query), [allOptions, query])
 
   const grouped = useMemo(() => {
     const map = new Map<string, PpePickerOption[]>()
@@ -99,6 +97,7 @@ export function AddPpeRowPicker({ onAdd, onClose }: AddPpeRowPickerProps): React
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search group, category or requirement…"
             className="w-full rounded-md border border-slate-600 bg-slate-950/80 py-2 pl-8 pr-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-sky-500/60 focus:outline-none focus:ring-2 focus:ring-sky-500/25"
+            disabled={loading}
           />
         </div>
       </div>
@@ -108,7 +107,9 @@ export function AddPpeRowPicker({ onAdd, onClose }: AddPpeRowPickerProps): React
         role="listbox"
         aria-label="PPE items"
       >
-        {grouped.length === 0 ? (
+        {loading ? (
+          <li className="px-4 py-8 text-center text-sm text-slate-500">Loading library…</li>
+        ) : grouped.length === 0 ? (
           <li className="px-4 py-8 text-center text-sm text-slate-500">No matching PPE</li>
         ) : (
           grouped.map(([group, options]) => (
@@ -118,18 +119,18 @@ export function AddPpeRowPicker({ onAdd, onClose }: AddPpeRowPickerProps): React
               </p>
               <ul>
                 {options.map((option) => (
-                  <li key={option.index}>
+                  <li key={option.item.id}>
                     <button
                       type="button"
                       role="option"
-                      onClick={() => onAdd(option.index)}
+                      onClick={() => onAdd(option.item)}
                       className="group flex w-full flex-col gap-0.5 border-l-2 border-transparent px-3 py-2.5 text-left transition hover:border-sky-500 hover:bg-sky-500/10 focus-visible:border-sky-500 focus-visible:bg-sky-500/10 focus-visible:outline-none"
                     >
                       <span className="text-sm font-medium text-slate-100 group-hover:text-sky-100">
-                        {option.category}
+                        {option.item.category}
                       </span>
                       <span className="text-xs leading-snug text-slate-400 group-hover:text-slate-300">
-                        {option.requirement}
+                        {option.item.requirement}
                       </span>
                     </button>
                   </li>
@@ -154,10 +155,16 @@ export function AddPpeRowPicker({ onAdd, onClose }: AddPpeRowPickerProps): React
 }
 
 interface AddPpeRowButtonProps {
-  onAdd: (templateIndex: number) => void
+  categories: PpeCategoryGroupDto[]
+  loading: boolean
+  onAdd: (item: PpeItemDto) => void
 }
 
-export function AddPpeRowButton({ onAdd }: AddPpeRowButtonProps): React.JSX.Element {
+export function AddPpeRowButton({
+  categories,
+  loading,
+  onAdd
+}: AddPpeRowButtonProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -176,7 +183,8 @@ export function AddPpeRowButton({ onAdd }: AddPpeRowButtonProps): React.JSX.Elem
       <button
         type="button"
         onClick={() => setOpen((wasOpen) => !wasOpen)}
-        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition ${
+        disabled={loading}
+        className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition disabled:opacity-50 ${
           open
             ? 'bg-sky-500/20 text-sky-300 ring-1 ring-sky-500/40'
             : 'text-sky-400 hover:bg-sky-500/10 hover:text-sky-300'
@@ -189,8 +197,10 @@ export function AddPpeRowButton({ onAdd }: AddPpeRowButtonProps): React.JSX.Elem
       </button>
       {open && (
         <AddPpeRowPicker
-          onAdd={(index) => {
-            onAdd(index)
+          categories={categories}
+          loading={loading}
+          onAdd={(item) => {
+            onAdd(item)
             setOpen(false)
           }}
           onClose={() => setOpen(false)}

@@ -1,6 +1,6 @@
 import type { PpeItem } from '@shared/rams/types'
-import { PPE_ITEMS } from '../../ppe/ppe'
-import { AddPpeRowButton } from '../../ppe/addPPERowPicker'
+import type { PpeItemDto } from '@shared/rams/library'
+import { AddPpeRowButton, ppeItemToRow, useRamsLibrary } from '@renderer/library'
 import { Section } from './Field'
 
 interface PpeTableProps {
@@ -9,15 +9,15 @@ interface PpeTableProps {
 }
 
 export function PpeTable({ items, onChange }: PpeTableProps): React.JSX.Element {
+  const { ppeCategories, loading } = useRamsLibrary()
+
   const update = (index: number, patch: Partial<PpeItem>): void => {
     const next = items.map((row, i) => (i === index ? { ...row, ...patch } : row))
     onChange(next)
   }
 
-  const addFromTemplate = (templateIndex: number): void => {
-    const template = PPE_ITEMS[templateIndex]
-    if (!template) return
-    onChange([...items, structuredClone(template)])
+  const addFromTemplate = (item: PpeItemDto): void => {
+    onChange([...items, structuredClone(ppeItemToRow(item))])
   }
 
   const remove = (index: number): void => onChange(items.filter((_, i) => i !== index))
@@ -64,7 +64,7 @@ export function PpeTable({ items, onChange }: PpeTableProps): React.JSX.Element 
           </tbody>
         </table>
       </div>
-      <AddPpeRowButton onAdd={addFromTemplate} />
+      <AddPpeRowButton categories={ppeCategories} loading={loading} onAdd={addFromTemplate} />
     </Section>
   )
 }

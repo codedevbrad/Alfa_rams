@@ -1,7 +1,12 @@
-﻿import RamsBuilder from './rams'
+﻿import { RamsLibraryProvider } from '@renderer/library'
+import RamsBuilder from './rams'
 
 function App(): React.JSX.Element {
-  return <RamsBuilder />
+  return (
+    <RamsLibraryProvider>
+      <RamsBuilder />
+    </RamsLibraryProvider>
+  )
 }
 
 export default App

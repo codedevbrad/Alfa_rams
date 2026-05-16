@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react'
 import { suggestedFileName } from '@shared/rams/document'
 import { validateDocument } from '@shared/rams/validate'
+import { HomeScreen } from '@renderer/home'
 import { useRamsSession } from './useRamsSession'
 import { useDocxPreview } from './useDocxPreview'
-import { RamsHome } from './components/RamsHome'
 import { NewRamsDialog } from './components/NewRamsDialog'
 import { RamsToolbar } from './components/RamsToolbar'
 import { RamsEditor } from './components/RamsEditor'
@@ -15,7 +15,7 @@ import {
   type PreviewFontId
 } from './preview-fonts'
 
-export default function RamsBuilder(): React.JSX.Element {
+function RamsBuilderContent(): React.JSX.Element {
   const session = useRamsSession()
   const [fontId, setFontId] = useState<PreviewFontId>(loadStoredPreviewFontId)
   const { buffer, loading, error } = useDocxPreview(session.document, fontId)
@@ -108,7 +108,11 @@ export default function RamsBuilder(): React.JSX.Element {
         />
       )}
 
-      {session.status === 'idle' && <RamsHome onNewRams={handleOpenNew} />}
+      {session.status === 'idle' && (
+        <div className="flex min-h-0 flex-1 flex-col">
+          <HomeScreen onNewRams={handleOpenNew} />
+        </div>
+      )}
 
       {session.status === 'editing' && session.document && (
         <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-2 overflow-hidden lg:grid-cols-2 lg:grid-rows-1">
@@ -136,4 +140,8 @@ export default function RamsBuilder(): React.JSX.Element {
       )}
     </div>
   )
+}
+
+export default function RamsBuilder(): React.JSX.Element {
+  return <RamsBuilderContent />
 }

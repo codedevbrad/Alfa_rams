@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["src/shared/*"]
+    }
+  },
+  "include": [
+    "prisma/seed.ts",
+    "src/main/db/seed-library.ts",
+    "src/renderer/src/library/activities/activities.ts",
+    "src/renderer/src/library/ppe/ppe.ts",
+    "src/shared/**/*"
+  ]
+}

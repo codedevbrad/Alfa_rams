@@ -11,9 +11,15 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+  - node_modules/.prisma/**
+  - node_modules/@prisma/**
+  - node_modules/better-sqlite3/**
+  - out/main/**
 extraResources:
   - from: resources/templates
     to: templates
+  - from: prisma/migrations
+    to: prisma/migrations
 win:
   executableName: rams
 nsis:
