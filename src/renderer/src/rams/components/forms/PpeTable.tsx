@@ -1,4 +1,6 @@
 import type { PpeItem } from '@shared/rams/types'
+import { PPE_ITEMS } from '../../ppe/ppe'
+import { AddPpeRowButton } from '../../ppe/addPPERowPicker'
 import { Section } from './Field'
 
 interface PpeTableProps {
@@ -12,7 +14,12 @@ export function PpeTable({ items, onChange }: PpeTableProps): React.JSX.Element 
     onChange(next)
   }
 
-  const add = (): void => onChange([...items, { category: '', requirement: '' }])
+  const addFromTemplate = (templateIndex: number): void => {
+    const template = PPE_ITEMS[templateIndex]
+    if (!template) return
+    onChange([...items, structuredClone(template)])
+  }
+
   const remove = (index: number): void => onChange(items.filter((_, i) => i !== index))
 
   return (
@@ -57,9 +64,7 @@ export function PpeTable({ items, onChange }: PpeTableProps): React.JSX.Element 
           </tbody>
         </table>
       </div>
-      <button type="button" onClick={add} className="text-sm text-sky-400 hover:text-sky-300">
-        + Add PPE row
-      </button>
+      <AddPpeRowButton onAdd={addFromTemplate} />
     </Section>
   )
 }

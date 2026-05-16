@@ -1,5 +1,4 @@
 import type { RiskRow } from '@shared/rams/types'
-import { createBlankRiskRow } from '@shared/rams/document'
 import {
   LIKELIHOOD_SCALE,
   PERSONS_EXPOSED_LEGEND,
@@ -8,6 +7,8 @@ import {
   type RiskScaleLevel
 } from '@shared/rams/measures'
 import { riskBand, withComputedRisks } from '@shared/rams/risk'
+import { ACTIVITY_HAZARDS } from '../../activities/activities'
+import { AddRiskRowButton } from '../../activities/AddRiskRowPicker'
 import { Section } from './Field'
 
 function RiskScaleRow({ label, scale }: { label: string; scale: RiskScaleLevel[] }): React.JSX.Element {
@@ -52,8 +53,13 @@ export function RiskMatrixTable({
     onChange({ ...riskAssessment, rows })
   }
 
-  const addRow = (): void => {
-    onChange({ ...riskAssessment, rows: [...riskAssessment.rows, createBlankRiskRow()] })
+  const addRowFromTemplate = (templateIndex: number): void => {
+    const template = ACTIVITY_HAZARDS[templateIndex]
+    if (!template) return
+    onChange({
+      ...riskAssessment,
+      rows: [...riskAssessment.rows, structuredClone(template)]
+    })
   }
 
   const removeRow = (index: number): void => {
@@ -253,9 +259,7 @@ export function RiskMatrixTable({
           </tbody>
         </table>
       </div>
-      <button type="button" onClick={addRow} className="text-sm text-sky-400 hover:text-sky-300">
-        + Add risk row
-      </button>
+      <AddRiskRowButton onAdd={addRowFromTemplate} />
     </Section>
   )
 }
