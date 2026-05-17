@@ -5,6 +5,7 @@ import icon from '../../resources/icon.png?asset'
 import { ensureDatabase } from './db/ensure-database'
 import { registerLibraryIpcHandlers } from './rams/library-ipc-handlers'
 import { registerRamsIpcHandlers } from './rams/ipc-handlers'
+import { registerSettingsIpcHandlers } from './settings/settings-ipc-handlers'
 
 function createWindow(): void {
   // Create the browser window.
@@ -57,12 +58,14 @@ app.whenReady().then(() => {
   void ensureDatabase()
     .then(() => {
       registerRamsIpcHandlers()
+      registerSettingsIpcHandlers()
       registerLibraryIpcHandlers()
       createWindow()
     })
     .catch((error) => {
       console.error('Failed to initialize library database:', error)
       registerRamsIpcHandlers()
+      registerSettingsIpcHandlers()
       registerLibraryIpcHandlers()
       createWindow()
     })

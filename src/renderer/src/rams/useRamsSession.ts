@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { AiLibrarySelections } from '@shared/rams/ai-generate'
+import type { AiUsageSummary } from '@shared/rams/ai-usage'
 import type { RamsDocument, TemplateManifest } from '@shared/rams/types'
 import { cloneDocument, documentsEqual, normalizeDocument } from '@shared/rams/document'
 
@@ -10,6 +12,8 @@ export function useRamsSession(): {
   document: RamsDocument | null
   baseline: RamsDocument | null
   templateName: string | null
+  aiLibrarySelections: AiLibrarySelections | null
+  lastAiUsage: AiUsageSummary | null
   templates: TemplateManifest[]
   dirty: boolean
   isPickerOpen: boolean
@@ -17,6 +21,7 @@ export function useRamsSession(): {
   openNewRams: () => void
   closePicker: () => void
   selectTemplate: (templateId: string) => Promise<void>
+  generateWithAi: (input: { projectName: string; description: string }) => Promise<void>
   cancelDocument: () => void
   updateDocument: (doc: RamsDocument) => void
 } {
@@ -27,6 +32,8 @@ export function useRamsSession(): {
   const [templates, setTemplates] = useState<TemplateManifest[]>([])
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [preparedBy, setPreparedBy] = useState('ALFA Industrial Services Ltd')
+  const [aiLibrarySelections, setAiLibrarySelections] = useState<AiLibrarySelections | null>(null)
+  const [lastAiUsage, setLastAiUsage] = useState<AiUsageSummary | null>(null)
 
   const dirty = useMemo(
     () => status === 'editing' && document !== null && !documentsEqual(document, baseline),
@@ -74,6 +81,28 @@ export function useRamsSession(): {
       setDocument(normalized)
       setBaseline(cloneDocument(normalized))
       setTemplateName(manifest?.name ?? templateId)
+      setAiLibrarySelections(null)
+      setLastAiUsage(null)
+      setStatus('editing')
+      setIsPickerOpen(false)
+    },
+    [templates]
+  )
+
+  const generateWithAi = useCallback(
+    async (input: { projectName: string; description: string }) => {
+      const templateId = templates[0]?.id ?? 'general-rams'
+      const result = await window.api.rams.generateWithAi({
+        projectName: input.projectName,
+        description: input.description,
+        templateId
+      })
+      const normalized = normalizeDocument(result.document)
+      setDocument(normalized)
+      setBaseline(cloneDocument(normalized))
+      setTemplateName('AI generated')
+      setAiLibrarySelections(result.librarySelections)
+      setLastAiUsage(result.usage ?? null)
       setStatus('editing')
       setIsPickerOpen(false)
     },
@@ -85,6 +114,8 @@ export function useRamsSession(): {
     setDocument(null)
     setBaseline(null)
     setTemplateName(null)
+    setAiLibrarySelections(null)
+    setLastAiUsage(null)
     setStatus('idle')
   }, [confirmDiscard])
 
@@ -97,6 +128,8 @@ export function useRamsSession(): {
     document,
     baseline,
     templateName,
+    aiLibrarySelections,
+    lastAiUsage,
     templates,
     dirty,
     isPickerOpen,
@@ -104,6 +137,7 @@ export function useRamsSession(): {
     openNewRams,
     closePicker,
     selectTemplate,
+    generateWithAi,
     cancelDocument,
     updateDocument
   }

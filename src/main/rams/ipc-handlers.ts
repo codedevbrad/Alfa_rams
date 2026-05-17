@@ -3,7 +3,9 @@ import { writeFile } from 'fs/promises'
 import type { GenerateDocxPayload } from '../../shared/rams/generate-payload'
 import { generateDocx, getPreparedBy } from './generate-docx'
 import { openFileInDefaultApp } from './open-file'
+import { generateRamsWithAi } from './rams-ai-generator'
 import { listTemplates, loadTemplateDefaults } from './template-loader'
+import type { GenerateRamsAiInput } from '../../shared/rams/ai-generate'
 
 function sanitizeFileName(name: string): string {
   return name.replace(/[<>:"/\\|?*]/g, '').trim() || 'RAMS.docx'
@@ -39,6 +41,10 @@ export function registerRamsIpcHandlers(): void {
       await writeFile(filePath, Buffer.from(payload.buffer))
       return { canceled: false as const, filePath }
     }
+  )
+
+  ipcMain.handle('rams:generate-with-ai', (_event, input: GenerateRamsAiInput) =>
+    generateRamsWithAi(input)
   )
 
   ipcMain.handle('rams:open-path', async (_event, filePath: string) => {

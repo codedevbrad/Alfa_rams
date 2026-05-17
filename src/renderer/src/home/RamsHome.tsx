@@ -1,9 +1,14 @@
 interface RamsHomeProps {
   onNewRams: () => void
   onManageLibrary: () => void
+  onOpenSettings?: () => void
 }
 
-export function RamsHome({ onNewRams, onManageLibrary }: RamsHomeProps): React.JSX.Element {
+export function RamsHome({
+  onNewRams,
+  onManageLibrary,
+  onOpenSettings
+}: RamsHomeProps): React.JSX.Element {
   return (
     <div className="flex max-w-lg flex-col items-center gap-6 text-center">
       <div>
@@ -28,6 +33,15 @@ export function RamsHome({ onNewRams, onManageLibrary }: RamsHomeProps): React.J
         >
           Manage library
         </button>
+        {onOpenSettings && (
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="rounded-lg border border-slate-600 px-6 py-3 text-sm font-semibold text-slate-200 hover:bg-slate-800"
+          >
+            OpenAI settings
+          </button>
+        )}
       </div>
     </div>
   )

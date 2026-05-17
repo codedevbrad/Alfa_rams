@@ -4,9 +4,10 @@ import { RamsHome } from './RamsHome'
 
 interface HomeScreenProps {
   onNewRams: () => void
+  onOpenSettings?: () => void
 }
 
-export function HomeScreen({ onNewRams }: HomeScreenProps): React.JSX.Element {
+export function HomeScreen({ onNewRams, onOpenSettings }: HomeScreenProps): React.JSX.Element {
   const [view, setView] = useState<'home' | 'library'>('home')
 
   if (view === 'library') {
@@ -19,7 +20,11 @@ export function HomeScreen({ onNewRams }: HomeScreenProps): React.JSX.Element {
 
   return (
     <div className="flex min-h-0 flex-1 items-center justify-center px-6">
-      <RamsHome onNewRams={onNewRams} onManageLibrary={() => setView('library')} />
+      <RamsHome
+        onNewRams={onNewRams}
+        onManageLibrary={() => setView('library')}
+        onOpenSettings={onOpenSettings}
+      />
     </div>
   )
 }
