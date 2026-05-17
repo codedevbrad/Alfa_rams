@@ -1,14 +1,19 @@
 import { useCallback, useState } from 'react'
+import type { OpenAiStatus } from '@shared/rams/ai-generate'
 import { suggestedFileName } from '@shared/rams/document'
 import { validateDocument } from '@shared/rams/validate'
 import { HomeScreen } from '@renderer/home'
 import { useRamsSession } from './useRamsSession'
 import { useDocxPreview } from './useDocxPreview'
 import { NewRamsDialog } from './components/NewRamsDialog'
+import { AiSettingsModal } from '@renderer/settings/AiSettingsModal'
 import { RamsToolbar } from './components/RamsToolbar'
 import { RamsEditor } from './components/RamsEditor'
 import { DocumentPreview } from './components/DocumentPreview'
 import { SaveBanner } from './components/SaveBanner'
+import { AiGeneratingStepsOverlay } from './components/AiGeneratingStepsOverlay'
+import { AiGeneratedSummaryBar } from './components/AiGeneratedSummaryBar'
+import { AiGeneratedLibraryModal } from './components/AiGeneratedLibraryModal'
 import {
   loadStoredPreviewFontId,
   storePreviewFontId,
@@ -21,6 +26,27 @@ function RamsBuilderContent(): React.JSX.Element {
   const { buffer, loading, error } = useDocxPreview(session.document, fontId)
   const [saving, setSaving] = useState(false)
   const [savedFilePath, setSavedFilePath] = useState<string | null>(null)
+  const [aiGenerating, setAiGenerating] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [usageExportMessage, setUsageExportMessage] = useState<string | null>(null)
+  const [openAiStatus, setOpenAiStatus] = useState<OpenAiStatus>({ configured: false })
+  const [openAiStatusLoading, setOpenAiStatusLoading] = useState(false)
+  const [aiLibraryModalOpen, setAiLibraryModalOpen] = useState(false)
+  const refreshOpenAiStatus = useCallback(async (): Promise<OpenAiStatus> => {
+    setOpenAiStatusLoading(true)
+    try {
+      const status = await window.api.rams.getOpenAiStatus()
+      setOpenAiStatus(status)
+      return status
+    } catch {
+      const fallback = { configured: false }
+      setOpenAiStatus(fallback)
+      return fallback
+    } finally {
+      setOpenAiStatusLoading(false)
+    }
+  }, [])
 
   const handleSave = useCallback(async () => {
     if (!session.document) return
@@ -58,12 +84,41 @@ function RamsBuilderContent(): React.JSX.Element {
 
   const handleOpenNew = useCallback(() => {
     setSavedFilePath(null)
-    if (session.templates.length === 1) {
-      void session.selectTemplate(session.templates[0].id)
-      return
-    }
+    setAiError(null)
+    setAiLibraryModalOpen(false)
+    void refreshOpenAiStatus()
     session.openNewRams()
-  }, [session])
+  }, [session, refreshOpenAiStatus])
+
+  const handleStartAiStep = useCallback(() => {
+    void refreshOpenAiStatus()
+  }, [refreshOpenAiStatus])
+
+  const openSettings = useCallback(() => {
+    setSettingsOpen(true)
+    void refreshOpenAiStatus()
+  }, [refreshOpenAiStatus])
+
+  const handleOpenSettingsFromPicker = useCallback(() => {
+    session.closePicker()
+    openSettings()
+  }, [session, openSettings])
+
+  const handleGenerateAi = useCallback(
+    async (input: { projectName: string; description: string }) => {
+      setAiGenerating(true)
+      setAiError(null)
+      setAiLibraryModalOpen(false)
+      try {
+        await session.generateWithAi(input)
+      } catch (err) {
+        setAiError(err instanceof Error ? err.message : 'Generation failed')
+      } finally {
+        setAiGenerating(false)
+      }
+    },
+    [session]
+  )
 
   const handleCancel = useCallback(() => {
     setSavedFilePath(null)
@@ -110,14 +165,28 @@ function RamsBuilderContent(): React.JSX.Element {
 
       {session.status === 'idle' && (
         <div className="flex min-h-0 flex-1 flex-col">
-          <HomeScreen onNewRams={handleOpenNew} />
+          <HomeScreen
+            onNewRams={handleOpenNew}
+            onOpenSettings={openSettings}
+          />
         </div>
       )}
 
+      {aiGenerating && <AiGeneratingStepsOverlay />}
+
       {session.status === 'editing' && session.document && (
         <div className="grid min-h-0 flex-1 grid-cols-1 grid-rows-2 overflow-hidden lg:grid-cols-2 lg:grid-rows-1">
-          <div className="min-h-0 overflow-y-auto overscroll-contain border-r border-slate-700">
-            <RamsEditor document={session.document} onChange={session.updateDocument} />
+          <div className="flex min-h-0 flex-col overflow-hidden border-r border-slate-700">
+            {session.aiLibrarySelections && (
+              <AiGeneratedSummaryBar
+                selections={session.aiLibrarySelections}
+                usage={session.lastAiUsage}
+                onOpenModal={() => setAiLibraryModalOpen(true)}
+              />
+            )}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <RamsEditor document={session.document} onChange={session.updateDocument} />
+            </div>
           </div>
           <div className="flex min-h-0 flex-col overflow-hidden">
             <DocumentPreview
@@ -134,8 +203,35 @@ function RamsBuilderContent(): React.JSX.Element {
       {session.isPickerOpen && (
         <NewRamsDialog
           templates={session.templates}
-          onSelect={(id) => void session.selectTemplate(id)}
+          openAiStatus={openAiStatus}
+          generating={aiGenerating}
+          aiError={aiError}
+          onSelectTemplate={(id) => void session.selectTemplate(id)}
+          onStartAi={handleStartAiStep}
+          onGenerateAi={(input) => void handleGenerateAi(input)}
+          onOpenSettings={handleOpenSettingsFromPicker}
           onClose={session.closePicker}
+        />
+      )}
+
+      {aiLibraryModalOpen && session.aiLibrarySelections && (
+        <AiGeneratedLibraryModal
+          selections={session.aiLibrarySelections}
+          onClose={() => setAiLibraryModalOpen(false)}
+        />
+      )}
+
+      {settingsOpen && (
+        <AiSettingsModal
+          openAiStatus={openAiStatus}
+          openAiStatusLoading={openAiStatusLoading}
+          usageExportMessage={usageExportMessage}
+          onClose={() => setSettingsOpen(false)}
+          onOpenAiSaved={() => void refreshOpenAiStatus()}
+          onUsageExportMessage={(msg) => {
+            setUsageExportMessage(msg)
+            setTimeout(() => setUsageExportMessage(null), 5000)
+          }}
         />
       )}
     </div>

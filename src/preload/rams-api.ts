@@ -10,6 +10,8 @@ import type {
   UpsertPpeGroupInput,
   UpsertPpeItemInput
 } from '../shared/rams/library'
+import type { GenerateRamsAiInput, GenerateRamsAiResult, OpenAiStatus } from '../shared/rams/ai-generate'
+import type { AiUsageListResult } from '../shared/rams/ai-usage'
 import type { RamsDocument, TemplateManifest } from '../shared/rams/types'
 
 export interface RamsApi {
@@ -32,6 +34,13 @@ export interface RamsApi {
   deletePpeGroup: (id: number) => Promise<void>
   upsertPpeItem: (input: UpsertPpeItemInput) => Promise<PpeItemDto>
   deletePpeItem: (id: number) => Promise<void>
+  getOpenAiStatus: () => Promise<OpenAiStatus>
+  setOpenAiKey: (apiKey: string) => Promise<void>
+  clearOpenAiKey: () => Promise<void>
+  generateWithAi: (input: GenerateRamsAiInput) => Promise<GenerateRamsAiResult>
+  listAiUsage: (limit?: number) => Promise<AiUsageListResult>
+  clearAiUsage: () => Promise<void>
+  exportAiUsageCsv: () => Promise<{ canceled: true } | { canceled: false; filePath: string }>
 }
 
 export const ramsApi: RamsApi = {
@@ -50,5 +59,12 @@ export const ramsApi: RamsApi = {
   upsertPpeGroup: (input) => ipcRenderer.invoke('rams:library:upsert-ppe-group', input),
   deletePpeGroup: (id) => ipcRenderer.invoke('rams:library:delete-ppe-group', id),
   upsertPpeItem: (input) => ipcRenderer.invoke('rams:library:upsert-ppe-item', input),
-  deletePpeItem: (id) => ipcRenderer.invoke('rams:library:delete-ppe-item', id)
+  deletePpeItem: (id) => ipcRenderer.invoke('rams:library:delete-ppe-item', id),
+  getOpenAiStatus: () => ipcRenderer.invoke('rams:settings:get-openai-status'),
+  setOpenAiKey: (apiKey) => ipcRenderer.invoke('rams:settings:set-openai-key', apiKey),
+  clearOpenAiKey: () => ipcRenderer.invoke('rams:settings:clear-openai-key'),
+  generateWithAi: (input) => ipcRenderer.invoke('rams:generate-with-ai', input),
+  listAiUsage: (limit) => ipcRenderer.invoke('rams:usage:list', limit),
+  clearAiUsage: () => ipcRenderer.invoke('rams:usage:clear'),
+  exportAiUsageCsv: () => ipcRenderer.invoke('rams:usage:export-csv')
 }

@@ -65,10 +65,14 @@ export function AddRiskRowPicker({
 
   return (
     <div
-      role="dialog"
-      aria-label="Add risk row from library"
-      className="absolute left-0 top-full z-20 mt-2 w-[min(32rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-slate-600/80 bg-slate-900 shadow-xl shadow-black/40 ring-1 ring-white/5"
+      className="absolute left-0 top-full z-20 w-[min(32rem,calc(100vw-2rem))] pt-2"
+      role="presentation"
     >
+      <div
+        role="dialog"
+        aria-label="Add risk row from library"
+        className="overflow-hidden rounded-lg border border-slate-600/80 bg-slate-900 shadow-xl shadow-black/40 ring-1 ring-white/5"
+      >
       <div className="flex items-start justify-between gap-3 border-b border-slate-700/80 bg-slate-800/60 px-3 py-2.5">
         <div>
           <p className="text-sm font-medium text-slate-100">Add from library</p>
@@ -152,6 +156,7 @@ export function AddRiskRowPicker({
           Cancel
         </button>
       </div>
+      </div>
     </div>
   )
 }
@@ -181,7 +186,7 @@ export function AddRiskRowButton({
   }, [open])
 
   return (
-    <div ref={rootRef} className="relative inline-block">
+    <div ref={rootRef} className="relative inline-flex flex-col items-start">
       <button
         type="button"
         onClick={() => setOpen((wasOpen) => !wasOpen)}
