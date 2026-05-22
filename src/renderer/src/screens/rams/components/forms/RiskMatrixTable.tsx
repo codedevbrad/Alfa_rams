@@ -7,7 +7,7 @@ import {
   type RiskScaleLevel
 } from '@shared/rams/measures'
 import { riskBand, withComputedRisks } from '@shared/rams/risk'
-import { AddRiskRowButton, hazardToRiskRow, useRamsLibrary } from '@renderer/library'
+import { AddRiskRowButton, hazardToRiskRow, useRamsLibrary } from '@renderer/screens/rams/library'
 import { Section } from './Field'
 
 function RiskScaleRow({ label, scale }: { label: string; scale: RiskScaleLevel[] }): React.JSX.Element {

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LibraryAdmin } from '@renderer/library'
+import { LibraryAdmin } from '@renderer/screens/rams/library'
 import { RamsHome } from './RamsHome'
 
 interface HomeScreenProps {

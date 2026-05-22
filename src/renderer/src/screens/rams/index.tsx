@@ -2,11 +2,11 @@ import { useCallback, useState } from 'react'
 import type { OpenAiStatus } from '@shared/rams/ai-generate'
 import { suggestedFileName } from '@shared/rams/document'
 import { validateDocument } from '@shared/rams/validate'
-import { HomeScreen } from '@renderer/home'
+import { useAppNavigation } from '@renderer/navigation'
+import { HomeScreen } from '@renderer/screens/rams/home'
 import { useRamsSession } from './useRamsSession'
 import { useDocxPreview } from './useDocxPreview'
 import { NewRamsDialog } from './components/NewRamsDialog'
-import { AiSettingsModal } from '@renderer/settings/AiSettingsModal'
 import { RamsToolbar } from './components/RamsToolbar'
 import { RamsEditor } from './components/RamsEditor'
 import { DocumentPreview } from './components/DocumentPreview'
@@ -20,7 +20,8 @@ import {
   type PreviewFontId
 } from './preview-fonts'
 
-function RamsBuilderContent(): React.JSX.Element {
+function RamsScreenContent(): React.JSX.Element {
+  const { navigate } = useAppNavigation()
   const session = useRamsSession()
   const [fontId, setFontId] = useState<PreviewFontId>(loadStoredPreviewFontId)
   const { buffer, loading, error } = useDocxPreview(session.document, fontId)
@@ -28,13 +29,9 @@ function RamsBuilderContent(): React.JSX.Element {
   const [savedFilePath, setSavedFilePath] = useState<string | null>(null)
   const [aiGenerating, setAiGenerating] = useState(false)
   const [aiError, setAiError] = useState<string | null>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [usageExportMessage, setUsageExportMessage] = useState<string | null>(null)
   const [openAiStatus, setOpenAiStatus] = useState<OpenAiStatus>({ configured: false })
-  const [openAiStatusLoading, setOpenAiStatusLoading] = useState(false)
   const [aiLibraryModalOpen, setAiLibraryModalOpen] = useState(false)
   const refreshOpenAiStatus = useCallback(async (): Promise<OpenAiStatus> => {
-    setOpenAiStatusLoading(true)
     try {
       const status = await window.api.rams.getOpenAiStatus()
       setOpenAiStatus(status)
@@ -43,8 +40,6 @@ function RamsBuilderContent(): React.JSX.Element {
       const fallback = { configured: false }
       setOpenAiStatus(fallback)
       return fallback
-    } finally {
-      setOpenAiStatusLoading(false)
     }
   }, [])
 
@@ -95,14 +90,14 @@ function RamsBuilderContent(): React.JSX.Element {
   }, [refreshOpenAiStatus])
 
   const openSettings = useCallback(() => {
-    setSettingsOpen(true)
     void refreshOpenAiStatus()
-  }, [refreshOpenAiStatus])
+    navigate('settings')
+  }, [navigate, refreshOpenAiStatus])
 
   const handleOpenSettingsFromPicker = useCallback(() => {
     session.closePicker()
-    openSettings()
-  }, [session, openSettings])
+    navigate('settings')
+  }, [session, navigate])
 
   const handleGenerateAi = useCallback(
     async (input: { projectName: string; description: string }) => {
@@ -221,23 +216,10 @@ function RamsBuilderContent(): React.JSX.Element {
         />
       )}
 
-      {settingsOpen && (
-        <AiSettingsModal
-          openAiStatus={openAiStatus}
-          openAiStatusLoading={openAiStatusLoading}
-          usageExportMessage={usageExportMessage}
-          onClose={() => setSettingsOpen(false)}
-          onOpenAiSaved={() => void refreshOpenAiStatus()}
-          onUsageExportMessage={(msg) => {
-            setUsageExportMessage(msg)
-            setTimeout(() => setUsageExportMessage(null), 5000)
-          }}
-        />
-      )}
     </div>
   )
 }
 
-export default function RamsBuilder(): React.JSX.Element {
-  return <RamsBuilderContent />
+export function RamsScreen(): React.JSX.Element {
+  return <RamsScreenContent />
 }

@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react'
 import type { AiLibrarySelections } from '@shared/rams/ai-generate'
 import { buildAiLibrarySummaryText } from '@shared/rams/ai-generate'
-import { useRamsLibrary } from '@renderer/library'
+import { useRamsLibrary } from '@renderer/screens/rams/library'
 
 interface AiGeneratedLibraryModalProps {
   selections: AiLibrarySelections

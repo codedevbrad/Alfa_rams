@@ -1,6 +1,6 @@
 import type { PpeItem } from '@shared/rams/types'
 import type { PpeItemDto } from '@shared/rams/library'
-import { AddPpeRowButton, ppeItemToRow, useRamsLibrary } from '@renderer/library'
+import { AddPpeRowButton, ppeItemToRow, useRamsLibrary } from '@renderer/screens/rams/library'
 import { Section } from './Field'
 
 interface PpeTableProps {

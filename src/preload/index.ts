@@ -1,8 +1,9 @@
 import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
+import { emailApi } from './email-api'
 import { ramsApi } from './rams-api'
 
-const api = { rams: ramsApi }
+const api = { rams: ramsApi, email: emailApi }
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

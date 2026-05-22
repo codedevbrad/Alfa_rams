@@ -6,8 +6,8 @@
     "src/preload/**/*",
     "src/shared/**/*",
     "src/generated/**/*",
-    "src/renderer/src/library/activities/activities.ts",
-    "src/renderer/src/library/ppe/ppe.ts"
+    "src/renderer/src/screens/rams/library/activities/activities.ts",
+    "src/renderer/src/screens/rams/library/ppe/ppe.ts"
   ],
   "compilerOptions": {
     "composite": true,

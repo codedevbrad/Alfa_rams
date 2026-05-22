@@ -4,6 +4,9 @@ import { join, dirname } from 'path'
 
 interface SettingsFile {
   openaiApiKey?: string
+  gmailRefreshToken?: string
+  gmailLabelId?: string
+  gmailLabelName?: string
 }
 
 const settingsPath = (): string => join(app.getPath('userData'), 'settings.json')
@@ -54,3 +57,46 @@ export async function clearOpenAiKey(): Promise<void> {
   delete settings.openaiApiKey
   await writeSettings(settings)
 }
+
+export async function getGmailRefreshToken(): Promise<string | null> {
+  const settings = await readSettings()
+  const token = settings.gmailRefreshToken?.trim()
+  return token || null
+}
+
+export async function setGmailRefreshToken(token: string): Promise<void> {
+  const settings = await readSettings()
+  settings.gmailRefreshToken = token.trim()
+  await writeSettings(settings)
+}
+
+export async function clearGmailAuth(): Promise<void> {
+  const settings = await readSettings()
+  delete settings.gmailRefreshToken
+  delete settings.gmailLabelId
+  delete settings.gmailLabelName
+  await writeSettings(settings)
+}
+
+export async function getGmailLabel(): Promise<{ id: string; name: string } | null> {
+  const settings = await readSettings()
+  const id = settings.gmailLabelId?.trim()
+  const name = settings.gmailLabelName?.trim()
+  if (!id || !name) return null
+  return { id, name }
+}
+
+export async function setGmailLabel(id: string, name: string): Promise<void> {
+  const settings = await readSettings()
+  settings.gmailLabelId = id.trim()
+  settings.gmailLabelName = name.trim()
+  await writeSettings(settings)
+}
+
+export async function clearGmailLabel(): Promise<void> {
+  const settings = await readSettings()
+  delete settings.gmailLabelId
+  delete settings.gmailLabelName
+  await writeSettings(settings)
+}
+

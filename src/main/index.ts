@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -5,6 +6,7 @@ import icon from '../../resources/icon.png?asset'
 import { ensureDatabase } from './db/ensure-database'
 import { registerLibraryIpcHandlers } from './rams/library-ipc-handlers'
 import { registerRamsIpcHandlers } from './rams/ipc-handlers'
+import { registerEmailIpcHandlers } from './email/email-ipc-handlers'
 import { registerSettingsIpcHandlers } from './settings/settings-ipc-handlers'
 
 function createWindow(): void {
@@ -60,6 +62,7 @@ app.whenReady().then(() => {
       registerRamsIpcHandlers()
       registerSettingsIpcHandlers()
       registerLibraryIpcHandlers()
+      registerEmailIpcHandlers()
       createWindow()
     })
     .catch((error) => {
@@ -67,6 +70,7 @@ app.whenReady().then(() => {
       registerRamsIpcHandlers()
       registerSettingsIpcHandlers()
       registerLibraryIpcHandlers()
+      registerEmailIpcHandlers()
       createWindow()
     })
 
